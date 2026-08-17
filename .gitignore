@@ -49,3 +49,6 @@ vet-clinic-user-manual.pdf
 
 *.pdf
 graphify-out/
+
+# Dev-only auth bypass, must never be committed.
+prisma/dev-session.ts

@@ -1,5 +1,7 @@
 // Single source of truth for RBAC checks, route gating, and nav visibility.
 
+import { isPermissionEnabled } from "@/constants/features";
+
 export interface PermissionHolder {
   permissions?: string[] | null;
 }
@@ -8,6 +10,13 @@ export function hasPermission(
   user: PermissionHolder | null | undefined,
   permission: string,
 ): boolean {
+  // Deployment gate first. A permission belonging to a module this clinic does
+  // not run is denied even when the role grants it, so dead grants (the Vet's
+  // inventory:read, Admin's everything) clip harmlessly and nothing has to be
+  // removed from the catalogue in prisma/rbac.ts. This is the single chokepoint:
+  // requirePermission() delegates here, and nav visibility plus proxy.ts route
+  // gating both flow through it.
+  if (!isPermissionEnabled(permission)) return false;
   return Boolean(user?.permissions?.includes(permission));
 }
 
@@ -77,10 +86,12 @@ export const NAV_MODULES: NavModule[] = [
     permission: "invoices:read",
   },
   {
+    // Its own permission rather than notifications:read, so the website contact
+    // form can be switched off per deployment independently of reminders.
     href: "/messages",
     label: "Web Contact Form",
     icon: "Email",
-    permission: "notifications:read",
+    permission: "messages:read",
   },
   { href: "/users", label: "Staff", icon: "Group", permission: "users:read" },
   {
@@ -134,10 +145,11 @@ const ROUTE_RULES: { prefix: string; permission: string }[] = [
   // Services are the billable catalog behind invoicing, gated the same way.
   { prefix: "/services", permission: "invoices:read" },
   { prefix: "/notifications", permission: "notifications:read" },
-  // Website contact messages live under the Notifications (communications)
-  // permission, so front desk / admin can triage them.
-  { prefix: "/messages", permission: "notifications:read" },
-  { prefix: "/api/messages", permission: "notifications:read" },
+  // Website contact messages have their own permission so the module can be
+  // gated per deployment. The proxy checks these rules before any handler runs,
+  // which is what makes the page and its API unreachable when the flag is off.
+  { prefix: "/messages", permission: "messages:read" },
+  { prefix: "/api/messages", permission: "messages:read" },
   { prefix: "/users", permission: "users:read" },
   { prefix: "/api/users", permission: "users:read" },
   { prefix: "/audit", permission: "audit:read" },

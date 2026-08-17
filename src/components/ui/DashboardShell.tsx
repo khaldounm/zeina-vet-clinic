@@ -128,17 +128,25 @@ export default function DashboardShell({
     [firstName, lastName].filter(Boolean).join(" ") || "Signed in";
 
   // mini = icon-only rail (desktop collapsed). Mobile always renders full.
-  function navContent(mini: boolean, showCollapse: boolean) {
+  // overlay = the temporary mobile drawer, which the fixed AppBar sits on top of
+  // (zIndex drawer + 1). Repeating the logo there would only get clipped by that
+  // bar, so the overlay reserves matching height instead and lets the AppBar's
+  // own logo do the branding.
+  function navContent(mini: boolean, showCollapse: boolean, overlay = false) {
     return (
       <>
         <Toolbar
           sx={{
             justifyContent: mini ? "center" : "space-between",
             px: mini ? 1 : 2,
-            minHeight: mini ? undefined : DRAWER_TOOLBAR_MIN_HEIGHT,
+            minHeight: overlay
+              ? APPBAR_TOOLBAR_MIN_HEIGHT
+              : mini
+                ? undefined
+                : DRAWER_TOOLBAR_MIN_HEIGHT,
           }}
         >
-          {!mini && (
+          {!mini && !overlay && (
             <Box
               component="img"
               // Always the white variant: the nav pane is a dark fill in both
@@ -171,13 +179,17 @@ export default function DashboardShell({
         </Toolbar>
         <Box
           sx={{
-            overflow: "auto",
+            // flex:1 + minHeight:0 rather than height:100%. With height:100% the
+            // toolbar's height is added on top of a full-height body, so the pane
+            // overflows and the footer collides with the end of the list.
+            flex: 1,
+            minHeight: 0,
             display: "flex",
             flexDirection: "column",
-            height: "100%",
           }}
         >
-          <List sx={{ flexGrow: 1 }}>
+          {/* Only the list scrolls, so the footer stays pinned to the bottom. */}
+          <List sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
             {items.map((item) => {
               const selected = pathname.startsWith(item.href);
               return (
@@ -255,8 +267,8 @@ export default function DashboardShell({
             })}
           </List>
 
-          <Divider sx={{ borderColor: nav.rule }} />
-          <Box sx={{ p: mini ? 1 : 2, color: nav.text }}>
+          <Divider sx={{ borderColor: nav.rule, flexShrink: 0 }} />
+          <Box sx={{ p: mini ? 1 : 2, color: nav.text, flexShrink: 0 }}>
             {mini ? (
               <Stack spacing={1} sx={{ alignItems: "center" }}>
                 <Tooltip
@@ -390,7 +402,7 @@ export default function DashboardShell({
           },
         }}
       >
-        {navContent(false, false)}
+        {navContent(false, false, true)}
       </Drawer>
 
       {/* Desktop permanent (collapsible) drawer */}
