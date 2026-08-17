@@ -10,3 +10,20 @@ export const palette = {
 } as const;
 
 export type Palette = typeof palette;
+
+// Dark-mode surfaces and accent. Near-black grounds with a mauve/lilac accent,
+// layered so the page sits darkest, cards a step up, and the nav pane a step
+// above that. The nav's active pill is painted in `bg`, so a selected item
+// reads as the pane being notched through to the page behind it.
+export const darkPalette = {
+  bg: "#0B0A0D", // page background, and the nav's active pill
+  paper: "#17141C", // card / surface background
+  nav: "#191521", // nav pane, a step lighter than paper
+  textPrimary: "#F3EFF5",
+  textSecondary: "#A9A1AE",
+  mauve: "#C9A2C8", // accent
+  mauveSoft: "#F0E2F0", // accent text on dark grounds
+  rule: "#2A2531", // dividers / borders
+} as const;
+
+export type DarkPalette = typeof darkPalette;

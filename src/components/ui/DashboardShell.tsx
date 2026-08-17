@@ -43,9 +43,46 @@ import LightModeIcon from "@mui/icons-material/LightMode";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { NAV_MODULES, hasPermission } from "@/lib/permissions";
 import { useColorMode } from "./ThemeRegistry";
+import { navTokens } from "./theme";
 
 const DRAWER_WIDTH = 240;
 const COLLAPSED_WIDTH = 64;
+
+// Logo heights, and the toolbar heights that have to accommodate them. The
+// toolbars must be taller than the logo or MUI's default 56/64px min-height
+// clips it, and the mobile AppBar height is shared with the spacer Toolbar in
+// <main> that keeps content clear of the fixed bar, so both read from here.
+const DRAWER_LOGO_HEIGHT = 64;
+const APPBAR_LOGO_HEIGHT = 56;
+const DRAWER_TOOLBAR_MIN_HEIGHT = DRAWER_LOGO_HEIGHT + 24;
+const APPBAR_TOOLBAR_MIN_HEIGHT = APPBAR_LOGO_HEIGHT + 16;
+
+// Radius of the inverted corner wedges above and below the active pill, which
+// make it read as carved out of the pane rather than sitting on top of it.
+const NOTCH = 14;
+
+// The active item is a full-bleed pill flush to the pane's right edge. The two
+// wedges are squares of pill colour with a quarter-disc masked out, so the pane
+// shows through and the join between pill and pane curves inward. Centring the
+// mask circle on the square's pane-side corner is what makes it concave.
+function notchWedge(edge: "top" | "bottom", activeBg: string) {
+  return {
+    content: '""',
+    position: "absolute" as const,
+    right: 0,
+    [edge === "top" ? "top" : "bottom"]: -NOTCH,
+    width: NOTCH,
+    height: NOTCH,
+    backgroundColor: activeBg,
+    pointerEvents: "none" as const,
+    maskImage: `radial-gradient(circle ${NOTCH}px at 0 ${
+      edge === "top" ? "0" : "100%"
+    }, transparent ${NOTCH}px, #000 ${NOTCH}px)`,
+    WebkitMaskImage: `radial-gradient(circle ${NOTCH}px at 0 ${
+      edge === "top" ? "0" : "100%"
+    }, transparent ${NOTCH}px, #000 ${NOTCH}px)`,
+  };
+}
 
 const ICONS: Record<string, React.ReactNode> = {
   Insights: <InsightsIcon />,
@@ -81,6 +118,7 @@ export default function DashboardShell({
 }: DashboardShellProps) {
   const pathname = usePathname();
   const { mode, toggle } = useColorMode();
+  const nav = navTokens[mode];
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
@@ -97,22 +135,23 @@ export default function DashboardShell({
           sx={{
             justifyContent: mini ? "center" : "space-between",
             px: mini ? 1 : 2,
+            minHeight: mini ? undefined : DRAWER_TOOLBAR_MIN_HEIGHT,
           }}
         >
           {!mini && (
             <Box
               component="img"
-              src={
-                mode === "dark"
-                  ? "/dr-zeina-semaan-logo-white.webp"
-                  : "/dr-zeina-semaan-logo.webp"
-              }
+              // Always the white variant: the nav pane is a dark fill in both
+              // modes, so the ink logo would disappear against it in light mode.
+              src="/dr-zeina-semaan-logo-white.webp"
               alt="Dr. Zeina Semaan Vet Clinic"
               sx={{
-                height: 32,
+                height: DRAWER_LOGO_HEIGHT,
                 width: "auto",
-                maxWidth: 150,
+                maxWidth: DRAWER_WIDTH - 72,
+                objectFit: "contain",
                 display: "block",
+                my: 2,
               }}
             />
           )}
@@ -121,6 +160,10 @@ export default function DashboardShell({
               onClick={() => setCollapsed((c) => !c)}
               size="small"
               aria-label={mini ? "expand navigation" : "collapse navigation"}
+              sx={{
+                color: nav.textMuted,
+                "&:hover": { backgroundColor: nav.hoverBg },
+              }}
             >
               {mini ? <ChevronRightIcon /> : <ChevronLeftIcon />}
             </IconButton>
@@ -154,8 +197,32 @@ export default function DashboardShell({
                       selected={selected}
                       onClick={() => setMobileOpen(false)}
                       sx={{
+                        position: "relative",
+                        overflow: "visible",
                         justifyContent: mini ? "center" : "flex-start",
-                        px: 2.5,
+                        px: mini ? 1.5 : 2.5,
+                        py: 1.25,
+                        ml: mini ? 1 : 1.5,
+                        mr: mini ? 1 : 0,
+                        color: nav.textMuted,
+                        borderRadius: mini ? 2 : 0,
+                        borderTopLeftRadius: 999,
+                        borderBottomLeftRadius: 999,
+                        "&:hover": { backgroundColor: nav.hoverBg },
+                        "&.Mui-selected": {
+                          backgroundColor: nav.activeBg,
+                          color: nav.activeText,
+                          fontWeight: 700,
+                          "&:hover": { backgroundColor: nav.activeBg },
+                          // The carved corners only make sense on the full-bleed
+                          // pill; the mini rail keeps a plain rounded chip.
+                          ...(mini
+                            ? {}
+                            : {
+                                "&::before": notchWedge("top", nav.activeBg),
+                                "&::after": notchWedge("bottom", nav.activeBg),
+                              }),
+                        },
                       }}
                     >
                       <ListItemIcon
@@ -163,11 +230,24 @@ export default function DashboardShell({
                           minWidth: 0,
                           mr: mini ? 0 : 3,
                           justifyContent: "center",
+                          color: "inherit",
                         }}
                       >
                         {ICONS[item.icon]}
                       </ListItemIcon>
-                      {!mini && <ListItemText primary={item.label} />}
+                      {!mini && (
+                        <ListItemText
+                          primary={item.label}
+                          slotProps={{
+                            primary: {
+                              sx: {
+                                fontWeight: selected ? 700 : 500,
+                                fontSize: 15,
+                              },
+                            },
+                          }}
+                        />
+                      )}
                     </ListItemButton>
                   </Tooltip>
                 </ListItem>
@@ -175,15 +255,19 @@ export default function DashboardShell({
             })}
           </List>
 
-          <Divider />
-          <Box sx={{ p: mini ? 1 : 2 }}>
+          <Divider sx={{ borderColor: nav.rule }} />
+          <Box sx={{ p: mini ? 1 : 2, color: nav.text }}>
             {mini ? (
               <Stack spacing={1} sx={{ alignItems: "center" }}>
                 <Tooltip
                   title={mode === "light" ? "Dark mode" : "Light mode"}
                   placement="right"
                 >
-                  <IconButton aria-label="toggle color mode" onClick={toggle}>
+                  <IconButton
+                    aria-label="toggle color mode"
+                    onClick={toggle}
+                    sx={{ color: nav.textMuted }}
+                  >
                     {mode === "light" ? <DarkModeIcon /> : <LightModeIcon />}
                   </IconButton>
                 </Tooltip>
@@ -191,6 +275,7 @@ export default function DashboardShell({
                   <IconButton
                     aria-label="Sign out"
                     onClick={() => signOut({ callbackUrl: "/login" })}
+                    sx={{ color: nav.textMuted }}
                   >
                     <LogoutIcon />
                   </IconButton>
@@ -204,9 +289,8 @@ export default function DashboardShell({
                 {roleName && (
                   <Typography
                     variant="caption"
-                    color="text.secondary"
                     noWrap
-                    sx={{ display: "block" }}
+                    sx={{ display: "block", color: nav.textMuted }}
                   >
                     {roleName}
                   </Typography>
@@ -219,17 +303,24 @@ export default function DashboardShell({
                       mode === "light" ? <DarkModeIcon /> : <LightModeIcon />
                     }
                     onClick={toggle}
-                    sx={{ justifyContent: "center" }}
+                    sx={{
+                      justifyContent: "center",
+                      color: nav.text,
+                      "&:hover": { backgroundColor: nav.hoverBg },
+                    }}
                   >
                     {mode === "light" ? "Dark mode" : "Light mode"}
                   </Button>
                   <Button
                     fullWidth
                     variant="text"
-                    color="inherit"
                     startIcon={<LogoutIcon />}
                     onClick={() => signOut({ callbackUrl: "/login" })}
-                    sx={{ justifyContent: "center" }}
+                    sx={{
+                      justifyContent: "center",
+                      color: nav.textMuted,
+                      "&:hover": { backgroundColor: nav.hoverBg },
+                    }}
                   >
                     Sign out
                   </Button>
@@ -253,7 +344,7 @@ export default function DashboardShell({
         elevation={1}
         sx={{ display: { md: "none" }, zIndex: (t) => t.zIndex.drawer + 1 }}
       >
-        <Toolbar>
+        <Toolbar sx={{ minHeight: APPBAR_TOOLBAR_MIN_HEIGHT }}>
           <IconButton
             edge="start"
             aria-label="open navigation"
@@ -270,7 +361,13 @@ export default function DashboardShell({
                 : "/dr-zeina-semaan-logo.webp"
             }
             alt="Dr. Zeina Semaan Veterinary Clinic"
-            sx={{ height: 28, width: "auto", maxWidth: 150 }}
+            sx={{
+              height: APPBAR_LOGO_HEIGHT,
+              width: "auto",
+              maxWidth: 300,
+              objectFit: "contain",
+              my: 1,
+            }}
           />
         </Toolbar>
       </AppBar>
@@ -286,6 +383,10 @@ export default function DashboardShell({
           "& .MuiDrawer-paper": {
             width: DRAWER_WIDTH,
             boxSizing: "border-box",
+            backgroundColor: nav.bg,
+            backgroundImage: "none",
+            color: nav.text,
+            borderRight: "none",
           },
         }}
       >
@@ -304,6 +405,10 @@ export default function DashboardShell({
             width: desktopWidth,
             boxSizing: "border-box",
             overflowX: "hidden",
+            backgroundColor: nav.bg,
+            backgroundImage: "none",
+            color: nav.text,
+            borderRight: "none",
             transition: (t) =>
               t.transitions.create("width", {
                 easing: t.transitions.easing.sharp,
@@ -316,8 +421,14 @@ export default function DashboardShell({
       </Drawer>
 
       <Box component="main" sx={{ flexGrow: 1, p: 3, minWidth: 0 }}>
-        {/* Spacer so content clears the fixed mobile AppBar */}
-        <Toolbar sx={{ display: { md: "none" } }} />
+        {/* Spacer so content clears the fixed mobile AppBar. Its min-height must
+            track the AppBar's Toolbar above, hence the shared constant. */}
+        <Toolbar
+          sx={{
+            display: { md: "none" },
+            minHeight: APPBAR_TOOLBAR_MIN_HEIGHT,
+          }}
+        />
         {children}
       </Box>
     </Box>

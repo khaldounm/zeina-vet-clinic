@@ -13,8 +13,12 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { useColorMode } from "@/components/ui/ThemeRegistry";
+
+const LOGIN_LOGO_HEIGHT = 72;
 
 function LoginForm() {
+  const { mode } = useColorMode();
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/";
@@ -48,10 +52,25 @@ function LoginForm() {
   return (
     <Paper elevation={3} sx={{ p: 4, width: "100%", maxWidth: 400 }}>
       <Stack component="form" spacing={3} onSubmit={handleSubmit}>
-        <Box>
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>
-            Vet Clinic
-          </Typography>
+        <Box sx={{ textAlign: "center" }}>
+          <Box
+            component="img"
+            src={
+              mode === "dark"
+                ? "/dr-zeina-semaan-logo-white.webp"
+                : "/dr-zeina-semaan-logo.webp"
+            }
+            alt="Dr. Zeina Semaan Vet Clinic"
+            sx={{
+              height: LOGIN_LOGO_HEIGHT,
+              width: "auto",
+              maxWidth: "100%",
+              objectFit: "contain",
+              display: "block",
+              mx: "auto",
+              mb: 2,
+            }}
+          />
           <Typography color="text.secondary">Sign in to continue</Typography>
         </Box>
 

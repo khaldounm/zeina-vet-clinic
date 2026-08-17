@@ -4,11 +4,10 @@ import { createContext, useContext, useMemo, useState } from "react";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
+import { COLOR_MODE_COOKIE } from "@/constants/theme";
 import { darkTheme, lightTheme } from "./theme";
 
 type Mode = "light" | "dark";
-
-export const COLOR_MODE_COOKIE = "color-mode";
 
 const ColorModeContext = createContext<{ mode: Mode; toggle: () => void }>({
   mode: "light",

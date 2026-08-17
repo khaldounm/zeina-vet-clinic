@@ -1,7 +1,7 @@
 "use client";
 
 import { createTheme, type Theme } from "@mui/material/styles";
-import { palette } from "@/constants/palette";
+import { darkPalette, palette } from "@/constants/palette";
 
 export { palette };
 
@@ -43,18 +43,54 @@ const lightTokens: ModeTokens = {
 };
 
 const darkTokens: ModeTokens = {
-  bg: palette.ink,
-  paper: "#241F1A",
-  textPrimary: palette.cream,
-  textSecondary: "#B8B0A4",
-  primaryMain: palette.cream,
-  primaryHover: "#E5DFD3",
-  primaryContrast: palette.ink,
-  secondaryMain: "#C79461",
-  secondaryContrast: palette.ink,
-  rule: "#3A332C",
-  selectionBg: palette.cream,
-  selectionColor: palette.ink,
+  bg: darkPalette.bg,
+  paper: darkPalette.paper,
+  textPrimary: darkPalette.textPrimary,
+  textSecondary: darkPalette.textSecondary,
+  primaryMain: darkPalette.textPrimary,
+  primaryHover: "#DCD4DE",
+  primaryContrast: darkPalette.bg,
+  secondaryMain: darkPalette.mauve,
+  secondaryContrast: darkPalette.bg,
+  rule: darkPalette.rule,
+  selectionBg: darkPalette.mauve,
+  selectionColor: darkPalette.bg,
+};
+
+// Nav pane tokens. The pane is a filled dark card in both modes, with the active
+// item as a full-bleed pill whose inverted corners make it read as carved out.
+// In both modes the pill is painted in the PAGE background, not a tint of the
+// pane, so a selected item looks like the pane has been cut through to the page
+// behind it. Light: ink pane, cream pill. Dark: #191521 pane, #0B0A0D pill.
+export interface NavTokens {
+  bg: string;
+  text: string;
+  textMuted: string;
+  hoverBg: string;
+  activeBg: string;
+  activeText: string;
+  rule: string;
+}
+
+export const navTokens: Record<"light" | "dark", NavTokens> = {
+  light: {
+    bg: palette.ink,
+    text: palette.cream,
+    textMuted: "rgba(244, 241, 234, 0.72)",
+    hoverBg: "rgba(244, 241, 234, 0.10)",
+    activeBg: palette.cream,
+    activeText: palette.ink,
+    rule: "rgba(244, 241, 234, 0.14)",
+  },
+  dark: {
+    bg: darkPalette.nav,
+    text: darkPalette.textPrimary,
+    textMuted: "rgba(243, 239, 245, 0.64)",
+    hoverBg: "rgba(201, 162, 200, 0.12)",
+    activeBg: darkPalette.bg,
+    activeText: darkPalette.mauveSoft,
+    rule: darkPalette.rule,
+  },
 };
 
 function makeTheme(mode: "light" | "dark", t: ModeTokens): Theme {

@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
-import ThemeRegistry, {
-  COLOR_MODE_COOKIE,
-} from "@/components/ui/ThemeRegistry";
+import ThemeRegistry from "@/components/ui/ThemeRegistry";
+import { COLOR_MODE_COOKIE } from "@/constants/theme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

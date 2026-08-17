@@ -40,7 +40,10 @@ export default auth((req) => {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const loginUrl = new URL("/login", nextUrl);
-    loginUrl.searchParams.set("callbackUrl", path);
+    // Only carry a callbackUrl when it says something the login page does not
+    // already assume: it defaults to "/", so tagging the root path on just
+    // produces a noisy /login?callbackUrl=%2F. Deep links still round-trip.
+    if (path !== "/") loginUrl.searchParams.set("callbackUrl", path);
     return NextResponse.redirect(loginUrl);
   }
 
